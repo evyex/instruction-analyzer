@@ -29,10 +29,12 @@ Mark estimated counts with `~`.
 
 ## Step 1: Decide Analysis Mode
 
-Offer two modes in the user's language:
+Offer four modes in the user's language:
 
 1. Full instruction audit.
 2. Specific task or command load analysis.
+3. Instruction quality audit (static — checks structure exists).
+4. Audit trail analysis (dynamic — checks enforcement is happening).
 
 ## Mode 1: Full Instruction Audit
 
@@ -170,6 +172,119 @@ Redundancy: ~N%
 ### Key Findings
 
 Include 2-4 concise bullets.
+
+## Mode 3: Instruction Quality Audit
+
+### 3.1 Collect Target Files
+
+Ask the user which instruction files to audit, or default to all instruction files discovered in Step 1.1.
+
+### 3.2 Run Automated Checks
+
+Use `scripts/quality_checker.py` from this skill directory:
+
+```bash
+python3 <skill_dir>/scripts/quality_checker.py --project-root /path/to/project file1.md file2.md
+```
+
+The `--project-root` flag tells the checker where to find `.claude/hooks/` and `.claude/settings.json` for hook enforcement checks. Defaults to the current working directory.
+
+This checks 40 rules across 7 categories against each file and returns JSON with per-rule results and scores.
+
+### 3.3 Review Automated Results
+
+Parse the JSON output. For each file, review the failed rules and verify whether the automated detection is accurate. Adjust findings if the checker produced false positives.
+
+For rules that require semantic judgment (STRUCT-04 competing instructions, STRUCT-02 reasoning quality), read the file and apply human-level analysis on top of the automated result.
+
+### 3.4 Produce the Report
+
+Use this structure:
+
+## Instruction Quality Report
+
+Files audited: N
+Overall score: N%
+
+### Scores by Category
+
+| Category | Score | Weight | Passed | Total |
+|---|---|---|---|---|
+| Description | 85% | 20% | 5/6 | 6 |
+| Structure | 66% | 15% | 4/6 | 6 |
+| Agent Readiness | 50% | 15% | 2/4 | 4 |
+| Hook Enforcement | 57% | 20% | 4/7 | 7 |
+| Context Reset | 42% | 15% | 3/7 | 7 |
+| Workflow Enforcement | 40% | 10% | 2/5 | 5 |
+| Formatting | 80% | 5% | 4/5 | 5 |
+
+### Per-File Results
+
+For each file, list:
+
+| Rule | Severity | Status | Detail |
+|---|---|---|---|
+| DESC-01 | Critical | PASS | OK |
+| STRUCT-01 | High | FAIL | File has 220 lines (max 150) |
+
+### Key Findings
+
+Include 3-5 concise bullets with the most impactful issues and suggested fixes.
+
+### Rule Reference
+
+Rules are defined in `rules/quality-rules.md` within this skill directory.
+
+Scoring weights: Description (20%) → Structure (15%) → Agent Readiness (15%) → Hook Enforcement (20%) → Context Reset (15%) → Workflow Enforcement (10%) → Formatting (5%).
+
+## Mode 4: Audit Trail Analysis
+
+Dynamic analysis mode — reads `.claude/audit.log` to verify enforcement is actually happening, not just configured.
+
+Requires hooks to have been running and writing structured log entries. If no log exists, report that and recommend setting up RESET-07.
+
+### 4.1 Run the Analyzer
+
+Use `scripts/audit_trail_analyzer.py` from this skill directory:
+
+```bash
+python3 <skill_dir>/scripts/audit_trail_analyzer.py --project-root /path/to/project --days 30
+```
+
+Returns JSON with session compliance, hook failure patterns, and flags.
+
+### 4.2 Produce the Report
+
+Use this structure:
+
+## Audit Trail Analysis
+
+Period: last N days
+Sessions audited: N
+Total log entries: N
+
+### Session Reset Compliance
+
+| Metric | Value | Status |
+|---|---|---|
+| Resets triggered | 11/12 | Warning |
+| Handoff read at start | 10/11 | Warning |
+| Validation not bypassed | 11/11 | OK |
+| Average reset timing | 2h 14m | OK |
+
+### Hook Failure Patterns
+
+| Hook | Passes | Failures |
+|---|---|---|
+| pre-commit | 47 | 12 |
+| pre-push | 38 | 2 |
+
+Most failed feature: notifications (avg 3.8 attempts)
+Most reliable feature: auth (avg 1.1 attempts)
+
+### Flags
+
+List all actionable flags from the analysis.
 
 ## Implementation Notes
 
