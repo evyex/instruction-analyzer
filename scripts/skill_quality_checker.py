@@ -835,18 +835,58 @@ def compute_scores(all_results: list[dict]) -> dict:
 
     scores = {}
     overall = 0.0
+    total_weight = 0.0
     for cat, data in categories.items():
-        total = len(data["rules"])
-        passed = sum(1 for r in data["rules"] if r["passed"])
+        # Only count applicable rules in scoring
+        applicable = [r for r in data["rules"] if r.get("applicable", True)]
+        total = len(applicable)
+        passed = sum(1 for r in applicable if r["passed"])
+        na_count = len(data["rules"]) - len(applicable)
         pct = (passed / total * 100) if total > 0 else 100
+        # If all rules in category are N/A, weight is 0
+        effective_weight = data["weight"] if total > 0 else 0.0
         scores[cat] = {
             "passed": passed, "total": total,
-            "score": round(pct, 1), "weight": data["weight"]
+            "score": round(pct, 1), "weight": data["weight"],
+            "na_count": na_count,
         }
-        overall += pct * data["weight"]
+        overall += pct * effective_weight
+        total_weight += effective_weight
 
+    # Normalize overall score by actual weight used
+    if total_weight > 0:
+        overall = overall / total_weight * 1.0
     scores["overall"] = round(overall, 1)
     return scores
+
+
+def detect_file_type(path: str, content: str) -> str:
+    """Detect file type: 'skill', 'command', or 'config'.
+
+    - skill: has YAML frontmatter with name/description, or filename is SKILL.md
+    - command: lives under .claude/commands/ (plain markdown prompt file)
+    - config: CLAUDE.md or similar project-level config
+    """
+    basename = os.path.basename(path).lower()
+    normalized = path.replace("\\", "/")
+
+    # Skills: SKILL.md or has valid frontmatter with description
+    if basename == "skill.md":
+        return "skill"
+    fm, fm_valid = parse_frontmatter(content)
+    if fm_valid and fm and "description" in fm:
+        return "skill"
+
+    # Commands: inside .claude/commands/ or a commands/ directory
+    if "/.claude/commands/" in normalized or "/commands/" in normalized:
+        return "command"
+
+    # Config: CLAUDE.md, AGENTS.md, or similar root-level config
+    if basename in ("claude.md", "agents.md", "copilot-instructions.md"):
+        return "config"
+
+    # Default: treat as command (most permissive — avoids false fails on unknown files)
+    return "command"
 
 
 def audit_file(path: str, project_root: str = ".") -> dict:
@@ -859,15 +899,59 @@ def audit_file(path: str, project_root: str = ".") -> dict:
         return {"file": path, "error": str(e)}
 
     fm, fm_valid = parse_frontmatter(content)
+    file_type = detect_file_type(path, content)
 
     results = []
-    results.extend(check_description_rules(content, fm, fm_valid))
+
+    # DESC rules: only applicable to skills (require frontmatter description)
+    if file_type == "skill":
+        results.extend(check_description_rules(content, fm, fm_valid))
+    else:
+        for rule_id, name, sev in [
+            ("DESC-01", "Description field exists", "critical"),
+            ("DESC-02", "Single line description", "critical"),
+            ("DESC-03", "Trigger condition present", "critical"),
+            ("DESC-04", "No vague language", "high"),
+            ("DESC-05", "Names output artifact", "high"),
+            ("DESC-06", "80+ characters", "high"),
+        ]:
+            results.append({
+                "rule": rule_id, "name": name, "severity": sev,
+                "passed": True, "applicable": False,
+                "detail": f"N/A — {file_type} files do not use skill frontmatter"
+            })
+
     results.extend(check_structure_rules(content))
-    results.extend(check_agent_readiness_rules(content))
+
+    # AGENT rules: applicable to skills and commands, not config files
+    if file_type in ("skill", "command"):
+        results.extend(check_agent_readiness_rules(content))
+    else:
+        for rule_id, name, sev in [
+            ("AGENT-01", "Contract framing", "high"),
+            ("AGENT-02", "Testable success criteria", "high"),
+            ("AGENT-03", "Composability documented", "medium"),
+            ("AGENT-04", "Evaluator separation", "medium"),
+        ]:
+            results.append({
+                "rule": rule_id, "name": name, "severity": sev,
+                "passed": True, "applicable": False,
+                "detail": f"N/A — {file_type} files are not single-purpose instructions"
+            })
+
     results.extend(check_hook_rules(content, project_root))
     results.extend(check_reset_rules(content, project_root))
     results.extend(check_workflow_rules(content))
-    results.extend(check_formatting_rules(content))
+
+    # FMT rules: run all, but mark FMT-01 (frontmatter) as N/A for non-skills
+    fmt_results = check_formatting_rules(content)
+    if file_type != "skill":
+        for r in fmt_results:
+            if r["rule"] == "FMT-01":
+                r["passed"] = True
+                r["applicable"] = False
+                r["detail"] = f"N/A — {file_type} files do not require frontmatter"
+    results.extend(fmt_results)
 
     scores = compute_scores(results)
 
@@ -876,6 +960,7 @@ def audit_file(path: str, project_root: str = ".") -> dict:
 
     return {
         "file": path,
+        "file_type": file_type,
         "scores": scores,
         "total_rules": len(results),
         "passed": len(passed),

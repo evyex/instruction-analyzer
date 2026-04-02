@@ -2,6 +2,18 @@
 
 Rules for evaluating instruction file quality. Each rule has a severity, check logic, and pass/fail examples.
 
+## File Types
+
+The checker auto-detects three file types and adjusts which rules apply:
+
+| File type | Detection | Skipped rules |
+|---|---|---|
+| **skill** | Has YAML frontmatter with `description`, or filename is `SKILL.md` | None — all 40 rules apply |
+| **command** | Lives under `.claude/commands/` or a `commands/` directory | DESC-01–06, FMT-01 (no frontmatter) |
+| **config** | `CLAUDE.md`, `AGENTS.md`, or similar root-level config | DESC-01–06, AGENT-01–04, FMT-01 |
+
+Skipped rules are marked N/A and excluded from scoring. The overall score is renormalized to the applicable weight.
+
 ## Scoring Weights
 
 | Category | Weight |
