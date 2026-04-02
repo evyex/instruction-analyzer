@@ -29,12 +29,13 @@ Mark estimated counts with `~`.
 
 ## Step 1: Decide Analysis Mode
 
-Offer four modes in the user's language:
+Offer five modes in the user's language:
 
 1. Full instruction audit.
 2. Specific task or command load analysis.
 3. Instruction quality audit (static — checks structure exists).
 4. Audit trail analysis (dynamic — checks enforcement is happening).
+5. SDD workflow audit (project-level — checks five-layer model compliance).
 
 ## Mode 1: Full Instruction Audit
 
@@ -181,15 +182,15 @@ Ask the user which instruction files to audit, or default to all instruction fil
 
 ### 3.2 Run Automated Checks
 
-Use `scripts/quality_checker.py` from this skill directory:
+Use `scripts/skill_quality_checker.py` from this skill directory:
 
 ```bash
-python3 <skill_dir>/scripts/quality_checker.py --project-root /path/to/project file1.md file2.md
+python3 <skill_dir>/scripts/skill_quality_checker.py --project-root /path/to/project file1.md file2.md
 ```
 
 The `--project-root` flag tells the checker where to find `.claude/hooks/` and `.claude/settings.json` for hook enforcement checks. Defaults to the current working directory.
 
-This checks 40 rules across 7 categories against each file and returns JSON with per-rule results and scores.
+This checks 40 rules across 7 categories against each file and returns JSON with per-rule results and scores. The checker auto-detects file types (skill, command, config) and marks inapplicable rules as N/A — for example, frontmatter rules are skipped for commands and config files.
 
 ### 3.3 Review Automated Results
 
@@ -233,7 +234,7 @@ Include 3-5 concise bullets with the most impactful issues and suggested fixes.
 
 ### Rule Reference
 
-Rules are defined in `rules/quality-rules.md` within this skill directory.
+Rules are defined in `rules/skill-quality-rules.md` within this skill directory.
 
 Scoring weights: Description (20%) → Structure (15%) → Agent Readiness (15%) → Hook Enforcement (20%) → Context Reset (15%) → Workflow Enforcement (10%) → Formatting (5%).
 
@@ -285,6 +286,58 @@ Most reliable feature: auth (avg 1.1 attempts)
 ### Flags
 
 List all actionable flags from the analysis.
+
+## Mode 5: SDD Workflow Audit
+
+Project-level audit — checks whether the project follows the Spec-Driven Development five-layer model (Specification, Generation, Validation, Drift Detection, Feedback Loop).
+
+Unlike Mode 3 (which audits individual instruction files), Mode 5 audits the overall project workflow: does the project have specs, does it generate code from them, does it validate against them, does it detect drift, and does the feedback loop close?
+
+### 5.1 Run the Checker
+
+Use `scripts/sdd_workflow_checker.py` from this skill directory:
+
+```bash
+python3 <skill_dir>/scripts/sdd_workflow_checker.py --project-root /path/to/project
+```
+
+Returns JSON with per-layer results and scores.
+
+### 5.2 Produce the Report
+
+Use this structure:
+
+## SDD Workflow Audit
+
+Project: /path/to/project
+Overall score: N%
+
+### Scores by Layer
+
+| Layer | Score | Weight | Passed | Total |
+|---|---|---|---|---|
+| Specification | 100% | 25% | 4/4 | 4 |
+| Generation | 100% | 20% | 3/3 | 3 |
+| Validation | 50% | 25% | 2/4 | 4 |
+| Drift Detection | 50% | 15% | 1/2 | 2 |
+| Feedback Loop | 100% | 15% | 4/4 | 4 |
+
+### Per-Check Results
+
+| Rule | Severity | Status | Detail |
+|---|---|---|---|
+| SDD-SPEC-01 | Critical | PASS | OK |
+| SDD-VAL-03 | High | FAIL | No automated validation found |
+
+### Key Findings
+
+Include 3-5 concise bullets identifying the biggest gaps and recommended next steps.
+
+### Rule Reference
+
+Rules are defined in `rules/sdd-workflow-rules.md` within this skill directory.
+
+Scoring weights: Specification (25%) → Generation (20%) → Validation (25%) → Drift Detection (15%) → Feedback Loop (15%).
 
 ## Implementation Notes
 
