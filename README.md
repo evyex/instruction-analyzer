@@ -17,6 +17,9 @@ This skill analyzes agent instruction systems in a project.
 |---|---|---|
 | Full instruction audit | Scans instruction files from the project entry point and builds a dependency graph. | Token totals, cycles, duplication, redundancy, per-file stats. |
 | Task-specific load analysis | Analyzes one concrete user task or command and inferred load chain. | File load order, useful-token estimates, efficiency findings. |
+| Instruction quality audit | Checks instruction files against 40 rules across 7 categories. | Per-rule pass/fail, category scores, weighted overall score. |
+| Audit trail analysis | Parses `.claude/audit.log` to verify enforcement is happening. | Session reset compliance, hook failure patterns, actionable flags. |
+| SDD workflow audit | Checks project-level compliance with the five-layer SDD model. | Per-layer scores, per-check pass/fail, overall workflow score. |
 
 ## Output Example
 
@@ -49,6 +52,11 @@ Key Findings
 
 - `SKILL.md` - skill behavior and workflow.
 - `scripts/token_counter.py` - exact token counting helper.
+- `scripts/skill_quality_checker.py` - automated quality rule checker (static).
+- `scripts/audit_trail_analyzer.py` - audit log analyzer (dynamic).
+- `scripts/sdd_workflow_checker.py` - SDD five-layer workflow checker (project-level).
+- `rules/skill-quality-rules.md` - quality rule definitions with pass/fail examples.
+- `rules/sdd-workflow-rules.md` - SDD workflow rule definitions with pass/fail examples.
 - `instruction-analyzer.skill` - packaged artifact.
 
 ## Tips from authors
