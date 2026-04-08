@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Deterministic test suite for quality_checker.py and audit_trail_analyzer.py.
+Deterministic test suite for skill_quality_checker.py and audit_trail_analyzer.py.
 
-Run:  python3 scripts/test_quality_checker.py
+Run:  python3 scripts/hook_test_quality_checker.py
 Exit: 0 = all pass, 1 = failures
 
 Creates temporary fixtures, runs all checks, asserts expected pass/fail for
@@ -19,7 +19,7 @@ import textwrap
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 
-import quality_checker as qc
+import skill_quality_checker as qc
 import audit_trail_analyzer as ata
 
 

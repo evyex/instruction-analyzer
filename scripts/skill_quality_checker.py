@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Quality checker for instruction files.
-Usage: python3 quality_checker.py [--project-root /path/to/project] file1.md file2.md ...
+Usage: python3 skill_quality_checker.py [--project-root /path/to/project] file1.md file2.md ...
 Output: JSON audit report with per-file rule results and scores.
 The --project-root flag tells the checker where to look for .claude/hooks/ and .claude/settings.json.
 Defaults to the current working directory.

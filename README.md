@@ -17,9 +17,9 @@ This skill analyzes agent instruction systems in a project.
 |---|---|---|
 | Full instruction audit | Scans instruction files from the project entry point and builds a dependency graph. | Token totals, cycles, duplication, redundancy, per-file stats. |
 | Task-specific load analysis | Analyzes one concrete user task or command and inferred load chain. | File load order, useful-token estimates, efficiency findings. |
-| Instruction quality audit | Checks instruction files against 40 rules across 7 categories. | Per-rule pass/fail, category scores, weighted overall score. |
-| Audit trail analysis | Parses `.claude/audit.log` to verify enforcement is happening. | Session reset compliance, hook failure patterns, actionable flags. |
-| SDD workflow audit | Checks project-level compliance with the five-layer SDD model. | Per-layer scores, per-check pass/fail, overall workflow score. |
+| Instruction quality audit | Experimental, Claude-only. Checks instruction files against 40 rules across 7 categories. | Per-rule pass/fail, category scores, weighted overall score. |
+| Audit trail analysis | Experimental, Claude-only. Parses `.claude/audit.log` to verify enforcement is happening. | Session reset compliance, hook failure patterns, actionable flags. |
+| SDD workflow audit | Experimental, Claude-only. Checks project-level compliance with the five-layer SDD model. | Per-layer scores, per-check pass/fail, overall workflow score. |
 
 ## Output Example
 
