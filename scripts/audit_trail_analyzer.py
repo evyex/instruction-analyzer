@@ -233,7 +233,7 @@ def analyze(project_root: str, days: int = 30) -> dict:
     if not os.path.isfile(log_path):
         return {
             "error": f"No audit log found at {log_path}",
-            "recommendation": "Hook scripts must write structured entries to .claude/audit.log. See rules/quality-rules.md RESET-07 for the expected format."
+            "recommendation": "Hook scripts must write structured entries to .claude/audit.log. See rules/skill-quality-rules.md RESET-07 for the expected format."
         }
 
     entries = load_log(log_path, days)

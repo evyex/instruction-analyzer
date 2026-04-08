@@ -33,9 +33,9 @@ Offer five modes in the user's language:
 
 1. Full instruction audit.
 2. Specific task or command load analysis.
-3. Instruction quality audit (static — checks structure exists).
-4. Audit trail analysis (dynamic — checks enforcement is happening).
-5. SDD workflow audit (project-level — checks five-layer model compliance).
+3. Instruction quality audit (experimental, Claude-only; static — checks structure exists).
+4. Audit trail analysis (experimental, Claude-only; dynamic — checks enforcement is happening).
+5. SDD workflow audit (experimental, Claude-only; project-level — checks five-layer model compliance).
 
 ## Mode 1: Full Instruction Audit
 
@@ -176,6 +176,8 @@ Include 2-4 concise bullets.
 
 ## Mode 3: Instruction Quality Audit
 
+Experimental and Claude-only.
+
 ### 3.1 Collect Target Files
 
 Ask the user which instruction files to audit, or default to all instruction files discovered in Step 1.1.
@@ -240,6 +242,8 @@ Scoring weights: Description (20%) → Structure (15%) → Agent Readiness (15%)
 
 ## Mode 4: Audit Trail Analysis
 
+Experimental and Claude-only.
+
 Dynamic analysis mode — reads `.claude/audit.log` to verify enforcement is actually happening, not just configured.
 
 Requires hooks to have been running and writing structured log entries. If no log exists, report that and recommend setting up RESET-07.
@@ -288,6 +292,8 @@ Most reliable feature: auth (avg 1.1 attempts)
 List all actionable flags from the analysis.
 
 ## Mode 5: SDD Workflow Audit
+
+Experimental and Claude-only.
 
 Project-level audit — checks whether the project follows the Spec-Driven Development five-layer model (Specification, Generation, Validation, Drift Detection, Feedback Loop).
 
